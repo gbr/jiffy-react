@@ -1,23 +1,22 @@
-import React, { Component } from 'react';
+import React, { useState } from "react";
+import PropTypes from "prop-types";
 
-class Gif extends Component {
+const Gif = ({ videoSrc }) => {
+  const [loaded, setLoaded] = useState(false);
 
-    constructor(props) {
-        super(props)
-        this.state = {
-            loaded: false
-        }
-    }
+  return (
+    <video
+      className={`grid-item video ${loaded && "loaded"}`}
+      autoPlay
+      loop
+      src={videoSrc}
+      onLoadedData={() => setLoaded(true)}
+    />
+  );
+};
 
-    render() {
-        const { loaded } = this.state;
-        const { images } = this.props;
-        return (
-            <video className={`grid-item video ${loaded && 'loaded'}`} autoPlay loop
-                src={images.original.mp4}
-                onLoadedData={() => this.setState({ loaded: true })} />
-        )
-    }
-}
+Gif.propTypes = {
+  videoSrc: PropTypes.string
+};
 
 export default Gif;

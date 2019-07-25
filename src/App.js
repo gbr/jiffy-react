@@ -5,7 +5,20 @@ import Gif from "./Gif";
 
 const API = "uJCFMRMbCCS7PAFNGJ6nBWi4wx1IVcBj";
 
-// TODO convert refs to controlled components
+/* 
+  TODO optimize the mobile experience by:
+  - making sure input control are easily accessible via thumb
+  - removing old GIFs buried deep down in the DOM that you can't see anyway
+  - implementing more tap-friendly interface (tap to keep searching, search suggestions, clear search on the right, etc.)
+  - eventually implement a react native interface
+*/
+
+/*
+  TODO improve the visuals by bringing the app closer to the original designs by:
+  - having super large typography on desktop for short search terms (and resize as search gets longer)
+  - Pin blue rectangle with clickable GIF source URL
+  Implement image fullscreen if click outside the source URL
+ */
 
 const Header = ({ clearSearch, hasResults }) => (
   <div className="header grid">
@@ -32,8 +45,8 @@ class App extends Component {
     super(props);
     this.state = {
       searchTerm: "",
-      hintText: "Hit Enter to search",
-      gifs: []
+      hintText: "",
+      gifs: [] // TODO rename all mention of gif to srcUrl or something
     };
   }
 
@@ -48,20 +61,22 @@ class App extends Component {
       );
       const { data } = await response.json();
 
+      // TODO create caching mechanism to assume user will keep entering the same search term
+
       if (!data.length) {
         throw new Error(`Nothing found for ${searchTerm}`);
       }
 
       const randomGif = randomChoice(data);
 
-      this.setState((prevState, props) => ({
+      this.setState(prevState => ({
         ...prevState,
         gifs: [...prevState.gifs, randomGif],
         loading: false,
         hintText: `Hit Enter to see more ${searchTerm}`
       }));
     } catch (error) {
-      this.setState((prevState, props) => ({
+      this.setState(prevState => ({
         ...prevState,
         hintText: error.toString(),
         loading: false
@@ -71,7 +86,7 @@ class App extends Component {
 
   handleChange = event => {
     const { value } = event.target;
-    this.setState((prevState, props) => ({
+    this.setState(prevState => ({
       ...prevState,
       searchTerm: value,
       hintText: value.length > 2 ? `Hit Enter to search ${value}` : ""
@@ -86,13 +101,14 @@ class App extends Component {
   };
 
   clearSearch = () => {
-    this.setState((prevState, props) => ({
+    this.setState(prevState => ({
       ...prevState,
       searchTerm: "",
       hintText: "",
       gifs: []
     }));
     // note: this is using the ref input defined in the original input element
+    // this is one of the few good times to use a ref
     this.textInput.focus();
   };
 
@@ -103,9 +119,9 @@ class App extends Component {
       <div className="page">
         <Header clearSearch={this.clearSearch} hasResults={hasResults} />
 
-        <div className="search grid">
+        <div className="search grid ">
           {this.state.gifs.map((gif, idx) => (
-            <Gif {...gif} key={idx} />
+            <Gif videoSrc={gif.images.original.mp4} key={idx} />
           ))}
           <input
             type="text"
@@ -120,7 +136,10 @@ class App extends Component {
           />
         </div>
 
-        <UserHint {...this.state} />
+        <UserHint
+          hintText={this.state.hintText}
+          loading={this.state.loading || false}
+        />
       </div>
     );
   }

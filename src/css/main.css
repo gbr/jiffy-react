@@ -56,21 +56,32 @@ button {
 
 .title {
   margin: 0;
-  font-size: 24px;
+  font-size: 4vw;
 }
 
 .input {
   background: none;
-  font-size: 72px;
-  width: calc(100vw - 4rem);
+  font-size: 10vw;
+  width: 80vw;
   border: none;
   outline: none;
   text-align: center;
   padding: 0;
+  padding-top: 5vh;
 }
 
 .input::placeholder {
   color: #323232;
+}
+
+.mobile-grid {
+  display: grid;
+  place-items: center;
+  margin: auto;
+}
+
+.mobile-grid button {
+  padding-top: 5vh;
 }
 
 .grid {
@@ -84,7 +95,7 @@ button {
 
 .user-hint {
   text-align: center;
-  font-size: 24px;
+  font-size: 3vw;
   line-height: 38px;
   min-height: 38px;
 }
@@ -124,14 +135,18 @@ button {
   .user-hint,
   .title {
     font-size: 18px;
+    line-height: 1.5;
+  }
+
+  .user-hint {
+    color: gray;
   }
 
   .page {
     padding: 2rem;
   }
 
-  .input {
-    font-size: 36px;
-    padding-top: 48px;
+  .grid-item {
+    max-height: 40vh;
   }
 }

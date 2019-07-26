@@ -15,14 +15,13 @@ const API = "uJCFMRMbCCS7PAFNGJ6nBWi4wx1IVcBj";
 
 /*
   TODO improve the visuals by bringing the app closer to the original designs by:
-  - having super large typography on desktop for short search terms (and resize as search gets longer)
   - Pin blue rectangle with clickable GIF source URL
-  Implement image fullscreen if click outside the source URL
+  - Implement image fullscreen if click outside the source URL (basically replace mobile target for new result)
  */
 
-const Header = ({ clearSearch, hasResults }) => (
+const Header = ({ clearSearch, hasResults, isMobile }) => (
   <div className="header grid">
-    {hasResults ? (
+    {!isMobile && hasResults ? (
       <button onClick={clearSearch}>
         <img alt="" src={clearButton} />
       </button>
@@ -50,6 +49,11 @@ class App extends Component {
     };
   }
 
+  componentDidMount() {
+    this.handleWindowResize();
+    window.addEventListener("resize", this.handleWindowResize);
+  }
+
   searchGiphy = async searchTerm => {
     this.setState(() => ({
       loading: true
@@ -73,7 +77,9 @@ class App extends Component {
         ...prevState,
         gifs: [...prevState.gifs, randomGif],
         loading: false,
-        hintText: `Hit Enter to see more ${searchTerm}`
+        hintText: this.state.isMobile
+          ? `Keep tapping to see more ${searchTerm}`
+          : `Hit Enter to see more ${searchTerm}`
       }));
     } catch (error) {
       this.setState(prevState => ({
@@ -100,6 +106,21 @@ class App extends Component {
     }
   };
 
+  handleWindowResize = () => {
+    this.setState({
+      isMobile:
+        /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth <= 480
+    });
+  };
+
+  handleTouchStart = () => {
+    console.log("touchStart");
+    const { searchTerm } = this.state;
+    if (searchTerm.length > 2) {
+      this.searchGiphy(searchTerm);
+    }
+  };
+
   clearSearch = () => {
     this.setState(prevState => ({
       ...prevState,
@@ -113,16 +134,35 @@ class App extends Component {
   };
 
   render() {
-    const { searchTerm, gifs } = this.state;
+    const { searchTerm, gifs, isMobile } = this.state;
     const hasResults = gifs.length > 0;
+
     return (
       <div className="page">
-        <Header clearSearch={this.clearSearch} hasResults={hasResults} />
+        {/* <div className="mobile-cols"> */}
+        <Header
+          clearSearch={this.clearSearch}
+          hasResults={hasResults}
+          isMobile={isMobile}
+        />
 
-        <div className="search grid ">
-          {this.state.gifs.map((gif, idx) => (
-            <Gif videoSrc={gif.images.original.mp4} key={idx} />
-          ))}
+        <div className="mobile-grid">
+          <div className="search grid ">
+            {/* TODO add additional div with button here if it is mobile */}
+            {this.state.gifs.map((gif, idx) => (
+              <Gif
+                onTouchStart={this.handleTouchStart}
+                videoSrc={gif.images.original.mp4}
+                key={idx}
+              />
+            ))}
+            {hasResults && isMobile ? (
+              <button onClick={this.clearSearch}>
+                <img alt="" src={clearButton} />
+              </button>
+            ) : null}
+          </div>
+
           <input
             type="text"
             className="input"
@@ -130,11 +170,13 @@ class App extends Component {
             onChange={this.handleChange}
             onKeyPress={this.handleKeyPress}
             value={searchTerm}
+            // note: this ref is here for focus manipulation purposes only
             ref={input => {
               this.textInput = input;
             }}
           />
         </div>
+        {/* </div> */}
 
         <UserHint
           hintText={this.state.hintText}

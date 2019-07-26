@@ -31,9 +31,9 @@ const Header = ({ clearSearch, hasResults, isMobile }) => (
   </div>
 );
 
-const UserHint = ({ loading, hintText }) => (
+const UserHint = ({ loading, hintText, onTouchStart }) => (
   <div className="user-hint">
-    {loading ? <img src={loader} alt="" className="block mx-auto" /> : hintText}
+    {loading ? <img src={loader} alt="" className="block mx-auto" /> : <span onTouchStart={onTouchStart}>{hintText}</span>}
   </div>
 );
 
@@ -96,7 +96,7 @@ class App extends Component {
       ...prevState,
       gifs: [...prevState.gifs, randomGif],
       hintText: isMobile
-        ? `Keep tapping to see more ${searchTerm}`
+        ? `Tap here to see more ${searchTerm}`
         : `Hit Enter to see more ${searchTerm}`
     }));
   };
@@ -110,7 +110,7 @@ class App extends Component {
       hintText:
         value.length > 2
           ? isMobile
-            ? `Keep tapping to see more ${value}`
+            ? `Tap here to see more ${value}`
             : `Hit Enter to search ${value}`
           : ""
     });
@@ -167,7 +167,6 @@ class App extends Component {
             {/* TODO add additional div with button here if it is mobile */}
             {this.state.gifs.map((gif, idx) => (
               <Gif
-                onTouchStart={this.handleTouchStart}
                 videoSrc={gif}
                 key={idx}
               />
@@ -197,6 +196,7 @@ class App extends Component {
         <UserHint
           hintText={this.state.hintText}
           loading={this.state.loading || false}
+          onTouchStart={this.handleTouchStart}
         />
       </div>
     );

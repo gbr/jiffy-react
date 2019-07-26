@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 
-const Gif = ({ videoSrc, onTouchStart }) => {
+const Gif = ({ videoSrc }) => {
   const [loaded, setLoaded] = useState(false);
 
   return (
@@ -11,7 +11,6 @@ const Gif = ({ videoSrc, onTouchStart }) => {
       loop
       src={videoSrc}
       onLoadedData={() => setLoaded(true)}
-      onTouchStart={onTouchStart}
     />
   );
 };

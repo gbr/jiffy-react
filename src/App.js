@@ -33,7 +33,11 @@ const Header = ({ clearSearch, hasResults, isMobile }) => (
 
 const UserHint = ({ loading, hintText, onTouchStart }) => (
   <div className="user-hint">
-    {loading ? <img src={loader} alt="" className="block mx-auto" /> : <span onTouchStart={onTouchStart}>{hintText}</span>}
+    {loading ? (
+      <img src={loader} alt="" className="block mx-auto" />
+    ) : (
+      <span onTouchStart={onTouchStart}>{hintText}</span>
+    )}
   </div>
 );
 
@@ -66,7 +70,7 @@ class App extends Component {
     if (isDirty || !cache.length) {
       this.setState(prevState => ({
         loading: true,
-        gifs: (cache && cache.length) ? prevState.gifs : []
+        gifs: cache && cache.length ? prevState.gifs : []
       }));
 
       try {
@@ -130,8 +134,8 @@ class App extends Component {
     });
   };
 
-  handleTouchStart = () => {
-    console.log("touchStart");
+  handleTouchStart = event => {
+    event.preventDefault();
     const { searchTerm } = this.state;
     if (searchTerm.length > 2) {
       this.stackNewGif(searchTerm);
@@ -166,10 +170,7 @@ class App extends Component {
           <div className="search grid ">
             {/* TODO add additional div with button here if it is mobile */}
             {this.state.gifs.map((gif, idx) => (
-              <Gif
-                videoSrc={gif}
-                key={idx}
-              />
+              <Gif videoSrc={gif} key={idx} />
             ))}
             {hasResults && isMobile ? (
               <button onClick={this.clearSearch}>

@@ -7,14 +7,14 @@ const API = "uJCFMRMbCCS7PAFNGJ6nBWi4wx1IVcBj";
 
 /* 
   TODO optimize the mobile experience by:
-  - implementing more tap-friendly interface (search suggestions, etc.)
+  - Implement search suggestions with cached data for each (dog, cat, friday)
   - eventually implement a react native interface
 */
 
 /*
   TODO improve the visuals by bringing the app closer to the original designs by:
-  - Pin blue rectangle with clickable GIF source URL
-  - Implement image fullscreen if click outside the source URL (basically replace mobile target for new result)
+  - Pin blue rectangle with clickable GIF source URL (non-moobile only)
+  - Implement image fullscreen if click outside the source URL (basically replace mobile target for new result) (non-mobile only)
  */
 
 //  TODO clear tangled state bewteen isMobile, isDirty, and hintText—can derive from each other

@@ -7,22 +7,21 @@ const API = "uJCFMRMbCCS7PAFNGJ6nBWi4wx1IVcBj";
 
 /* 
   TODO optimize the mobile experience by:
-  - making sure input control are easily accessible via thumb
-  - removing old GIFs buried deep down in the DOM that you can't see anyway
-  - implementing more tap-friendly interface (tap to keep searching, search suggestions, clear search on the right, etc.)
+  - implementing more tap-friendly interface (search suggestions, etc.)
   - eventually implement a react native interface
 */
 
 /*
   TODO improve the visuals by bringing the app closer to the original designs by:
-  - having super large typography on desktop for short search terms (and resize as search gets longer)
   - Pin blue rectangle with clickable GIF source URL
-  Implement image fullscreen if click outside the source URL
+  - Implement image fullscreen if click outside the source URL (basically replace mobile target for new result)
  */
 
-const Header = ({ clearSearch, hasResults }) => (
+//  TODO clear tangled state bewteen isMobile, isDirty, and hintText—can derive from each other
+
+const Header = ({ clearSearch, hasResults, isMobile }) => (
   <div className="header grid">
-    {hasResults ? (
+    {!isMobile && hasResults ? (
       <button onClick={clearSearch}>
         <img alt="" src={clearButton} />
       </button>
@@ -38,7 +37,12 @@ const UserHint = ({ loading, hintText }) => (
   </div>
 );
 
-const randomChoice = arr => arr[Math.floor(Math.random() * arr.length)];
+const randomChoice = arr => {
+  const randIdx = Math.floor(Math.random() * arr.length);
+  const randEl = arr[randIdx];
+  arr.splice(randIdx, 1);
+  return randEl;
+};
 
 class App extends Component {
   constructor(props) {
@@ -50,79 +54,131 @@ class App extends Component {
     };
   }
 
-  searchGiphy = async searchTerm => {
-    this.setState(() => ({
-      loading: true
-    }));
+  componentDidMount() {
+    this.handleWindowResize();
+    window.addEventListener("resize", this.handleWindowResize);
+  }
 
-    try {
-      const response = await fetch(
-        `https://api.giphy.com/v1/gifs/search?api_key=${API}&q=${searchTerm}&limit=25&offset=0&rating=G&lang=en`
-      );
-      const { data } = await response.json();
+  stackNewGif = async searchTerm => {
+    const { isDirty, isMobile } = this.state;
+    let { cache } = this.state;
 
-      // TODO create caching mechanism to assume user will keep entering the same search term
+    if (isDirty || !cache.length) {
+      this.setState(prevState => ({
+        loading: true,
+        gifs: (cache && cache.length) ? prevState.gifs : []
+      }));
 
-      if (!data.length) {
-        throw new Error(`Nothing found for ${searchTerm}`);
+      try {
+        const limit = 10;
+        const response = await fetch(
+          `https://api.giphy.com/v1/gifs/search?api_key=${API}&q=${searchTerm}&limit=${limit}&offset=0&rating=G&lang=en`
+        );
+        const { data } = await response.json();
+
+        if (!data.length) {
+          throw new Error(`Nothing found for ${searchTerm}`);
+        }
+
+        cache = data.map(result => result.images.original.mp4);
+        this.setState({ cache, isDirty: false });
+      } catch (error) {
+        this.setState({
+          hintText: error.toString()
+        });
+      } finally {
+        this.setState({ loading: false });
       }
-
-      const randomGif = randomChoice(data);
-
-      this.setState(prevState => ({
-        ...prevState,
-        gifs: [...prevState.gifs, randomGif],
-        loading: false,
-        hintText: `Hit Enter to see more ${searchTerm}`
-      }));
-    } catch (error) {
-      this.setState(prevState => ({
-        ...prevState,
-        hintText: error.toString(),
-        loading: false
-      }));
     }
+    const randomGif = randomChoice(cache);
+
+    this.setState(prevState => ({
+      ...prevState,
+      gifs: [...prevState.gifs, randomGif],
+      hintText: isMobile
+        ? `Keep tapping to see more ${searchTerm}`
+        : `Hit Enter to see more ${searchTerm}`
+    }));
   };
 
   handleChange = event => {
     const { value } = event.target;
-    this.setState(prevState => ({
-      ...prevState,
+    const { isMobile } = this.state;
+    this.setState({
+      isDirty: true,
       searchTerm: value,
-      hintText: value.length > 2 ? `Hit Enter to search ${value}` : ""
-    }));
+      hintText:
+        value.length > 2
+          ? isMobile
+            ? `Keep tapping to see more ${value}`
+            : `Hit Enter to search ${value}`
+          : ""
+    });
   };
 
   handleKeyPress = event => {
     const { value } = event.target;
     if (value.length > 2 && event.key === "Enter") {
-      this.searchGiphy(value);
+      this.stackNewGif(value);
+    }
+  };
+
+  handleWindowResize = () => {
+    this.setState({
+      isMobile:
+        /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth <= 480
+    });
+  };
+
+  handleTouchStart = () => {
+    console.log("touchStart");
+    const { searchTerm } = this.state;
+    if (searchTerm.length > 2) {
+      this.stackNewGif(searchTerm);
     }
   };
 
   clearSearch = () => {
-    this.setState(prevState => ({
-      ...prevState,
+    this.setState({
       searchTerm: "",
       hintText: "",
       gifs: []
-    }));
+    });
     // note: this is using the ref input defined in the original input element
     // this is one of the few good times to use a ref
     this.textInput.focus();
   };
 
   render() {
-    const { searchTerm, gifs } = this.state;
+    const { searchTerm, gifs, isMobile } = this.state;
     const hasResults = gifs.length > 0;
+
     return (
       <div className="page">
-        <Header clearSearch={this.clearSearch} hasResults={hasResults} />
+        {/* <div className="mobile-cols"> */}
+        <Header
+          clearSearch={this.clearSearch}
+          hasResults={hasResults}
+          isMobile={isMobile}
+        />
 
-        <div className="search grid ">
-          {this.state.gifs.map((gif, idx) => (
-            <Gif videoSrc={gif.images.original.mp4} key={idx} />
-          ))}
+        <div className="mobile-grid">
+          <div className="search grid ">
+            {/* TODO add additional div with button here if it is mobile */}
+            {this.state.gifs.map((gif, idx) => (
+              <Gif
+                onTouchStart={this.handleTouchStart}
+                videoSrc={gif}
+                key={idx}
+              />
+            ))}
+            {hasResults && isMobile ? (
+              <button onClick={this.clearSearch}>
+                <img alt="" src={clearButton} />
+              </button>
+            ) : null}
+          </div>
+
           <input
             type="text"
             className="input"
@@ -130,11 +186,13 @@ class App extends Component {
             onChange={this.handleChange}
             onKeyPress={this.handleKeyPress}
             value={searchTerm}
+            // note: this ref is here for focus manipulation purposes only
             ref={input => {
               this.textInput = input;
             }}
           />
         </div>
+        {/* </div> */}
 
         <UserHint
           hintText={this.state.hintText}

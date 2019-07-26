@@ -8,9 +8,14 @@ const Gif = ({ videoSrc }) => {
     <video
       className={`grid-item video ${loaded && "loaded"}`}
       autoPlay
+      muted
+      playsinline
       loop
       src={videoSrc}
-      onLoadedData={() => setLoaded(true)}
+      onLoadedData={event => {
+        event.preventDefault();
+        setLoaded(true);
+      }}
     />
   );
 };

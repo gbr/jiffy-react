@@ -136,14 +136,6 @@ class App extends Component {
     });
   };
 
-  handleClickEvent = event => {
-    event.preventDefault();
-  };
-
-  handleTouchEnd = event => {
-    event.preventDefault();
-  };
-
   handleTouchStart = event => {
     event.preventDefault();
     const { searchTerm } = this.state;
@@ -178,7 +170,7 @@ class App extends Component {
 
         <div className="mobile-grid">
           <div className="search grid ">
-            {/* TODO add additional div with button here if it is mobile */}
+            {/* TODO determine if this could be a render prop */}
             {this.state.gifs.map((gif, idx) => (
               <Gif alt={searchTerm} videoSrc={gif} key={idx} />
             ))}
@@ -207,7 +199,6 @@ class App extends Component {
           hintText={this.state.hintText}
           loading={this.state.loading || false}
           onTouchStart={this.handleTouchStart}
-          onTouchEnd={this.handleTouchEnd}
         />
       </div>
     );

@@ -31,12 +31,14 @@ const Header = ({ clearSearch, hasResults, isMobile }) => (
   </div>
 );
 
-const UserHint = ({ loading, hintText, onTouchStart }) => (
+const UserHint = ({ loading, hintText, onTouchStart, onTouchEnd }) => (
   <div className="user-hint">
     {loading ? (
       <img src={loader} alt="" className="block mx-auto" />
     ) : (
-      <span onTouchStart={onTouchStart}>{hintText}</span>
+      <span onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        {hintText}
+      </span>
     )}
   </div>
 );
@@ -74,7 +76,7 @@ class App extends Component {
       }));
 
       try {
-        const limit = 10;
+        const limit = isMobile ? 5 : 15;
         const response = await fetch(
           `https://api.giphy.com/v1/gifs/search?api_key=${API}&q=${searchTerm}&limit=${limit}&offset=0&rating=G&lang=en`
         );
@@ -134,6 +136,14 @@ class App extends Component {
     });
   };
 
+  handleClickEvent = event => {
+    event.preventDefault();
+  };
+
+  handleTouchEnd = event => {
+    event.preventDefault();
+  };
+
   handleTouchStart = event => {
     event.preventDefault();
     const { searchTerm } = this.state;
@@ -170,7 +180,7 @@ class App extends Component {
           <div className="search grid ">
             {/* TODO add additional div with button here if it is mobile */}
             {this.state.gifs.map((gif, idx) => (
-              <Gif videoSrc={gif} key={idx} />
+              <Gif alt={searchTerm} videoSrc={gif} key={idx} />
             ))}
             {hasResults && isMobile ? (
               <button onClick={this.clearSearch}>
@@ -192,12 +202,12 @@ class App extends Component {
             }}
           />
         </div>
-        {/* </div> */}
 
         <UserHint
           hintText={this.state.hintText}
           loading={this.state.loading || false}
           onTouchStart={this.handleTouchStart}
+          onTouchEnd={this.handleTouchEnd}
         />
       </div>
     );
